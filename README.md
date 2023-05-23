@@ -1,1 +1,1 @@
-# osc-ml
+# synth-gan
