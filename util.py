@@ -1,5 +1,7 @@
 import numpy as np
 import soundfile as sf
+from oscillator import SampleRate
+import sounddevice as sd
 
 def write_wav(buff: np.ndarray, sr: int, path: str, bit_depth: int) -> None:
     # parse bit depth
@@ -20,3 +22,16 @@ def write_wav(buff: np.ndarray, sr: int, path: str, bit_depth: int) -> None:
     # write wav
     interleaved_buff = np.vstack((buff[0], buff[1])).T
     sf.write(path, interleaved_buff, sr, subtype)
+
+def play_buff(buff: np.ndarray, sr: SampleRate) -> None:
+    """
+    Plays the audio buffer.
+
+    buff: stereo audio buffer
+    sr: sample rate
+    """
+    sample_rate = 44100
+    if sr == SampleRate._48000:
+        sample_rate = 48000
+    sd.play(buff, sample_rate)
+    sd.wait()
