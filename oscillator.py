@@ -146,6 +146,30 @@ class Oscillator:
         buff1 = np.array(buff1) * buff1_weight
         buff2 = np.array(buff2) * buff2_weight
         return np.add(buff1, buff2)
+    
+    def crossfade_mono_buffs(self,
+                        buff1: np.ndarray,
+                        buff2: np.ndarray) -> np.ndarray:
+        """
+        Returns a crossfaded buff of the two provided mono buffs.
+
+        - buff1: np.ndarray: mono buff
+        - buff2: np.ndarray: mono buff
+
+        returns -> np.ndarray: mono crossfaded buff
+        """
+        fade_samples = int(fade_duration * sample_rate)  # Number of samples for the fade
+        fade = np.linspace(0, 1, fade_samples)
+        crossfade = np.concatenate((fade, np.ones(total_samples - 2 * fade_samples), fade[::-1]))
+
+        # Apply crossfade to the glide waveform
+        glide_waveform[-fade_samples:] *= crossfade[:fade_samples]
+
+        # Apply crossfade to the constant waveform
+        constant_waveform[:fade_samples] *= crossfade[fade_samples:]
+
+        # Concatenate the waveforms
+        waveform = np.concatenate((glide_waveform, constant_waveform))
 
 class WaveformOscillator(Oscillator):
     """
@@ -193,7 +217,7 @@ class WaveformOscillator(Oscillator):
         f1 = note_name_to_freq(final_note)
         
         # generate the time axis
-        n = int(self.sample_rate.value * waveform_params.len_s)
+        n_pitch = int(self.sample_rate.value * pitch_env_params.attack_s)
         t = np.linspace(start=0,
                         stop=waveform_params.len_s,
                         num=int(self.sample_rate.value * waveform_params.len_s),
@@ -204,7 +228,7 @@ class WaveformOscillator(Oscillator):
         # sweep = np.logspace(np.log10(f0), np.log10(f1), n)
 
         sharpness = 1
-        _t = np.linspace(0, 1, n)  # time values from 0 to 1
+        _t = np.linspace(0, 1, n_pitch)  # time values from 0 to 1
         # adjust the time values to control sharpness
         t_adjusted = np.power(_t, sharpness)
         # compute the frequency sweep
@@ -216,8 +240,20 @@ class WaveformOscillator(Oscillator):
         # define phase
         phi = 2 * np.pi * np.cumsum(sweep) * dt
         
-        # generate the bare sine wave
-        wave = waveform_params.mix * np.sin(phi)
+        # generate the pitch env sine wave
+        wave_pitch = waveform_params.mix * np.sin(phi)
+
+        # generate the constant pitch sine wave
+        t_const = np.linspace(start=0,
+                              stop=waveform_params.len_s - pitch_env_params.attack_s,
+                              num=int(self.sample_rate.value * (waveform_params.len_s - pitch_env_params.attack_s)),
+                              endpoint=False)
+        wave_const = np.sin(2 * np.pi * f1 * t_const)
+
+        # combine the waves
+        wave = np.concatenate((wave_pitch, wave_const))
+
+        # duplicate for stereo signal
         self.buff_bare = [wave, wave]
 
 class NoiseOscillator(Oscillator):

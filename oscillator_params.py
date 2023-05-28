@@ -40,9 +40,9 @@ class VolumeEnvParams:
 
 class PitchEnvParams:
     """
-    - range: semitones
-    - attack:
-    - sharpness: float = (0, 1) for exponential; > 1 for logarithmic
+    - range: int = range in semitones
+    - attack_s: length of the pitch env
+    - attack_sharpness: float = (0, 1) for exponential; > 1 for logarithmic
     """
     def __init__(self,
                  range: int,
