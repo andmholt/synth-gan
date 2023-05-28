@@ -1,5 +1,6 @@
 import sys
 sys.path.append('..')
+from uuid import UUID
 import sounddevice as sd
 import threading
 import numpy as np
@@ -14,6 +15,7 @@ from waveform_oscillator_component import WaveformOscillatorComponent
 from menu_component import MenuComponent
 from waveform_oscillator_controller import WaveformOscillatorController
 from synthesizer_menu_component import SynthesizerMenuComponent
+from preset import PresetHandler, Preset
 
 INIT_LEN_S: float = 2.0
 
@@ -26,13 +28,19 @@ class App:
         # play thread
         self.play_thread = None
 
+        # presets
+        self.preset_handler = PresetHandler()
+        self.presets = self.preset_handler.load_all_presets('presets.json')
+
         # theme
         self.app_theme = AppTheme(title_pad_x=0,
                                   title_pad_y=5,
                                   label_pad_x=0,
                                   label_pad_y=0,
                                   control_pad_x=10,
-                                  control_pad_y=2)
+                                  control_pad_y=2,
+                                  check_pad_x=5,
+                                  check_pad_y=1)
         
         # root
         self.root = tk.Tk()
@@ -67,12 +75,12 @@ class App:
                                                                    set_len_s_and_regen=self.set_len_s_and_regen)
         
         self.menu_component = MenuComponent(app_theme=self.app_theme,
-                                            column=2,
-                                            row=1,
+                                            column=3,
+                                            row=0,
                                             padx=20,
                                             pady=20,
                                             parent=self.root,
-                                            synthesizer=self.synthesizer)
+                                            presets=self.presets)
         
         # controllers
         self.fundamental_osc_controller = WaveformOscillatorController(is_fundamental_osc=True,
@@ -120,3 +128,10 @@ class App:
             self.play_thread.start()
         elif e.char == ' ' and self.is_playing:
             self.stop()
+
+    def insert_init_preset_and_load(self,) -> None:
+        pass
+
+    def load_preset(self,
+                    preset_id: UUID) -> None:
+        pass

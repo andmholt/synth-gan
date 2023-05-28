@@ -50,7 +50,7 @@ class WaveformOscillatorController:
         """
         return PitchEnvParams(range=self.osc_component.pitch_env_range.get(),
                               attack_s=self.osc_component.pitch_env_attack_len.get(), # NEED TO IMPLEMENT ON BACKEND
-                              sharpness=self.osc_component.pitch_env_attack_sharpness.get())
+                              attack_sharpness=self.osc_component.pitch_env_attack_sharpness.get())
     
     def get_volume_env_params(self) -> VolumeEnvParams:
         """

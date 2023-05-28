@@ -47,10 +47,10 @@ class PitchEnvParams:
     def __init__(self,
                  range: int,
                  attack_s: int,
-                 sharpness: float):
+                 attack_sharpness: float):
         self.range = range
         self.attack_s = attack_s
-        self.sharpness = sharpness
+        self.attack_sharpness = attack_sharpness
 
 class LowpassParams:
     """

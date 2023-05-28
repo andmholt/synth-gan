@@ -5,10 +5,14 @@ class AppTheme:
                  label_pad_x: int,
                  label_pad_y: int,
                  control_pad_x: int,
-                 control_pad_y: int):
+                 control_pad_y: int,
+                 check_pad_x: int,
+                 check_pad_y: int):
         self.title_pad_x = title_pad_x
         self.title_pad_y = title_pad_y
         self.label_pad_x = label_pad_x
         self.label_pad_y = label_pad_y
         self.control_pad_x = control_pad_x
         self.control_pad_y = control_pad_y
+        self.check_pad_x = check_pad_x
+        self.check_pad_y = check_pad_y
