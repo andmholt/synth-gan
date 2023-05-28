@@ -13,14 +13,14 @@ from util import write_wav, FilterOrder, SampleRate, BitDepth, plot_wave, play_b
 waveform_params = WaveformParams(len_s=3,
                                  mix=1,
                                  phase=0,
-                                 fundamental=NoteName.A_2,
+                                 fundamental=NoteName.A_5,
                                  complexity=0)
 volume_params = VolumeEnvParams(attack_s=0,
                                 attack_sharpness=5,
                                 decay_s=0,
                                 decay_sharpness=5)
 pitch_params = PitchEnvParams(range=-12,
-                              attack_s=0.5,
+                              attack_s=1.5,
                               attack_sharpness=1)
 lowpass_params = LowpassParams(mix=0,
                                cutoff=12000,

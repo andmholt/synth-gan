@@ -148,8 +148,9 @@ class Oscillator:
         return np.add(buff1, buff2)
     
     def crossfade_mono_buffs(self,
-                        buff1: np.ndarray,
-                        buff2: np.ndarray) -> np.ndarray:
+                             buff1: np.ndarray,
+                             buff2: np.ndarray,
+                             crossfade_len_s: float) -> np.ndarray:
         """
         Returns a crossfaded buff of the two provided mono buffs.
 
@@ -158,18 +159,43 @@ class Oscillator:
 
         returns -> np.ndarray: mono crossfaded buff
         """
-        fade_samples = int(fade_duration * sample_rate)  # Number of samples for the fade
-        fade = np.linspace(0, 1, fade_samples)
-        crossfade = np.concatenate((fade, np.ones(total_samples - 2 * fade_samples), fade[::-1]))
+        # fade_samples = int(fade_duration * sample_rate)  # Number of samples for the fade
+        # fade = np.linspace(0, 1, fade_samples)
+        # crossfade = np.concatenate((fade, np.ones(total_samples - 2 * fade_samples), fade[::-1]))
 
-        # Apply crossfade to the glide waveform
-        glide_waveform[-fade_samples:] *= crossfade[:fade_samples]
+        # # Apply crossfade to the glide waveform
+        # glide_waveform[-fade_samples:] *= crossfade[:fade_samples]
 
-        # Apply crossfade to the constant waveform
-        constant_waveform[:fade_samples] *= crossfade[fade_samples:]
+        # # Apply crossfade to the constant waveform
+        # constant_waveform[:fade_samples] *= crossfade[fade_samples:]
 
-        # Concatenate the waveforms
-        waveform = np.concatenate((glide_waveform, constant_waveform))
+        # # Concatenate the waveforms
+        # waveform = np.concatenate((glide_waveform, constant_waveform))
+
+        total_samples = len(buff1) + len(buff2)
+        n_fade_samples = int(crossfade_len_s * self.sample_rate.value)
+        n_fade_samples = min(n_fade_samples, len(buff1), len(buff2))
+
+        # fade buff1
+        fade_for_buff1 = np.linspace(start=1,
+                                     stop=0,
+                                     num=n_fade_samples)
+        buff1_fade = np.multiply(buff1[len(buff1)-n_fade_samples:], fade_for_buff1)
+
+        # fade buff2
+        fade_for_buff2 = np.linspace(start=0,
+                                     stop=1,
+                                     num=n_fade_samples)
+        buff2_fade = np.multiply(buff2[:n_fade_samples], fade_for_buff2)
+
+        # merge fades
+        merged_fades = np.add(buff1_fade, buff2_fade)
+
+        # merge buffs and fade
+        wave = np.concatenate((buff1[:len(buff1)-n_fade_samples], merged_fades, buff2[n_fade_samples:]))
+        print('LENS:', len(buff1), len(buff2), len(merged_fades), len(wave))
+
+        return wave
 
 class WaveformOscillator(Oscillator):
     """
@@ -251,7 +277,15 @@ class WaveformOscillator(Oscillator):
         wave_const = np.sin(2 * np.pi * f1 * t_const)
 
         # combine the waves
-        wave = np.concatenate((wave_pitch, wave_const))
+        # wave = np.concatenate((wave_pitch, wave_const))
+        CROSSFADE_LEN_S = 0.05
+        if CROSSFADE_LEN_S*2 > pitch_env_params.attack_s:
+            crossfade_len_s = pitch_env_params.attack_s/2
+        else: 
+            crossfade_len_s = CROSSFADE_LEN_S
+        wave = self.crossfade_mono_buffs(buff1=wave_pitch,
+                                         buff2=wave_const,
+                                         crossfade_len_s=crossfade_len_s)
 
         # duplicate for stereo signal
         self.buff_bare = [wave, wave]
