@@ -10,18 +10,18 @@ from oscillator_params import (WaveformParams,
 from note_name import NoteName
 from util import write_wav, FilterOrder, SampleRate, BitDepth, plot_wave, play_buff
 
-waveform_params = WaveformParams(len_s=3,
+waveform_params = WaveformParams(len_s=2,
                                  mix=1,
                                  phase=0,
-                                 fundamental=NoteName.A_5,
+                                 fundamental=NoteName.F_3,
                                  complexity=0)
 volume_params = VolumeEnvParams(attack_s=0,
                                 attack_sharpness=5,
-                                decay_s=0,
-                                decay_sharpness=5)
-pitch_params = PitchEnvParams(range=-12,
-                              attack_s=1.5,
-                              attack_sharpness=1)
+                                decay_s=2,
+                                decay_sharpness=70)
+pitch_params = PitchEnvParams(range=-24,
+                              attack_s=2,
+                              attack_sharpness=0.1)
 lowpass_params = LowpassParams(mix=0,
                                cutoff=12000,
                                order=FilterOrder._4)
@@ -39,5 +39,5 @@ osc = WaveformOscillator(sample_rate=SampleRate._44100)
 
 signal = osc(waveform_oscillator_params=params)
 play_buff(signal, SampleRate._44100)
-# plot_wave(signal)
+plot_wave(signal)
 # write_wav(signal, SampleRate._44100, 'test.wav', BitDepth._16)

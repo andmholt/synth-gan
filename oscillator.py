@@ -200,6 +200,35 @@ class Oscillator:
 
         return wave
 
+    def normalize_signal(self,) -> None:
+        """
+        Normalizes the buff.
+        """
+        buff_max = np.max(self.buff)
+        adj = 1/buff_max
+
+        # apply adjustment
+        # self.buff *= adj
+        self.buff = np.multiply(self.buff, adj)
+
+        # correct for out of bounds
+        self.buff = self.buff / np.max(np.abs(self.buff))
+
+    def normalize_signal_both_ways(self,) -> None:
+        """
+        Normalizes the buff both ways, positive and negative.
+        """
+        buff_max = np.max(self.buff)
+        buff_min = np.min(self.buff)
+        adj = max(1/buff_max, -1/buff_min)
+
+        # apply adjustment
+        # self.buff *= adj
+        self.buff = np.multiply(self.buff, adj)
+
+        # correct for out of bounds
+        self.buff = self.buff / np.max(np.abs(self.buff))
+
 class WaveformOscillator(Oscillator):
     """
     Basic waveform oscillator.
@@ -229,6 +258,9 @@ class WaveformOscillator(Oscillator):
         self.apply_volume_and_filter(volume_env_params=waveform_oscillator_params.volume_env_params,
                                      lowpass_params=waveform_oscillator_params.lowpass_params,
                                      highpass_params=waveform_oscillator_params.highpass_params)
+
+        # normalize
+        # self.normalize_signal_both_ways()
 
         # return buffer
         return self.buff
