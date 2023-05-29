@@ -30,6 +30,8 @@ class Oscillator:
             cutoff = 1
         elif lowpass_params.cutoff > 20000:
             cutoff = 20000
+        else:
+            cutoff = lowpass_params.cutoff
         nyquist = self.sample_rate.value / 2
         cutoff_norm = cutoff / nyquist
         # define butter
@@ -47,8 +49,10 @@ class Oscillator:
             return
         if highpass_params.cutoff < 1:
             cutoff = 1
-        elif highpass_buff.cutoff > 20000:
+        elif highpass_params.cutoff > 20000:
             cutoff = 20000
+        else:
+            cutoff = highpass_params.cutoff
         nyquist = self.sample_rate.value / 2
         cutoff_norm = cutoff / nyquist
         # define butter
@@ -193,7 +197,6 @@ class Oscillator:
 
         # merge buffs and fade
         wave = np.concatenate((buff1[:len(buff1)-n_fade_samples], merged_fades, buff2[n_fade_samples:]))
-        print('LENS:', len(buff1), len(buff2), len(merged_fades), len(wave))
 
         return wave
 
@@ -253,10 +256,9 @@ class WaveformOscillator(Oscillator):
         # define the frequency sweep
         # sweep = np.logspace(np.log10(f0), np.log10(f1), n)
 
-        sharpness = 1
         _t = np.linspace(0, 1, n_pitch)  # time values from 0 to 1
         # adjust the time values to control sharpness
-        t_adjusted = np.power(_t, sharpness)
+        t_adjusted = np.power(_t, pitch_env_params.attack_sharpness)
         # compute the frequency sweep
         sweep = f0 + (f1 - f0) * t_adjusted
 
@@ -264,7 +266,7 @@ class WaveformOscillator(Oscillator):
         # plt.show()
 
         # define phase
-        phi = 2 * np.pi * np.cumsum(sweep) * dt
+        phi = 2 * np.pi * np.cumsum(sweep) * dt + waveform_params.phase
         
         # generate the pitch env sine wave
         wave_pitch = waveform_params.mix * np.sin(phi)
@@ -274,7 +276,7 @@ class WaveformOscillator(Oscillator):
                               stop=waveform_params.len_s - pitch_env_params.attack_s,
                               num=int(self.sample_rate.value * (waveform_params.len_s - pitch_env_params.attack_s)),
                               endpoint=False)
-        wave_const = np.sin(2 * np.pi * f1 * t_const)
+        wave_const = waveform_params.mix * np.sin(2 * np.pi * f1 * t_const)
 
         # combine the waves
         # wave = np.concatenate((wave_pitch, wave_const))

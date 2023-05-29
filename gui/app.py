@@ -24,13 +24,15 @@ class App:
 
         # state
         self.is_playing = False
+        self.synthesizer_len_s = INIT_LEN_S
+        self.curr_preset_id = None
 
         # play thread
         self.play_thread = None
 
         # presets
         self.preset_handler = PresetHandler()
-        self.presets = self.preset_handler.load_all_presets('presets.json')
+        self.presets = self.preset_handler.load_all_from_disk('presets.json')
 
         # theme
         self.app_theme = AppTheme(title_pad_x=0,
@@ -56,7 +58,8 @@ class App:
                                                                      padx=20,
                                                                      pady=20,
                                                                      title='Fundamental Oscillator',
-                                                                     parent=self.root)
+                                                                     parent=self.root,
+                                                                     synthesizer_len_s=self.synthesizer_len_s)
         
         self.floof_osc_component = WaveformOscillatorComponent(app_theme=self.app_theme,
                                                                column=1,
@@ -64,7 +67,8 @@ class App:
                                                                padx=20,
                                                                pady=20,
                                                                title='Floof Oscillator',
-                                                               parent=self.root)
+                                                               parent=self.root,
+                                                               synthesizer_len_s=self.synthesizer_len_s)
         
         self.synthesizer_menu_component = SynthesizerMenuComponent(app_theme=self.app_theme,
                                                                    column=2,
@@ -80,7 +84,10 @@ class App:
                                             padx=20,
                                             pady=20,
                                             parent=self.root,
-                                            presets=self.presets)
+                                            presets=list(self.presets.values()),
+                                            load_preset=self.load_preset,
+                                            insert_init_and_load_all=self.insert_init_and_load_all,
+                                            save_presets_to_disk=self.save_presets_to_disk)
         
         # controllers
         self.fundamental_osc_controller = WaveformOscillatorController(is_fundamental_osc=True,
@@ -105,6 +112,7 @@ class App:
 
         - len_s: float
         """
+        self.synthesizer_len_s = len_s
         self.fundamental_osc_controller.set_len_s_and_regen(len_s=len_s)
         self.floof_osc_controller.set_len_s_and_regen(len_s=len_s)
 
@@ -121,17 +129,60 @@ class App:
 
     def on_key_press(self,
                      e) -> None:
-        if e.char == ' ' and not self.is_playing:
+        if e.char == ' ' and not self.is_playing and self.root.focus_get() != self.menu_component.preset_name_entry:
             if self.play_thread != None and self.play_thread.is_alive():
                 self.play_thread.join()
             self.play_thread = threading.Thread(target=self.play)
             self.play_thread.start()
-        elif e.char == ' ' and self.is_playing:
+        elif e.char == ' ' and self.is_playing and self.root.focus_get() != self.menu_component.preset_name_entry:
             self.stop()
 
-    def insert_init_preset_and_load(self,) -> None:
-        pass
+    def insert_init_and_load_all(self,) -> None:
+        self.presets = self.preset_handler.insert_init_and_load_all(name='new')
+        self.refresh_presets_listbox()
+
+    def refresh_presets_listbox(self) -> None:
+        self.menu_component.preset_list.delete(0, self.menu_component.preset_list.size()-1)
+        self.menu_component.presets = list(self.presets.values())
+        for preset in self.menu_component.presets:
+            self.menu_component.preset_list.insert(tk.END, preset.name)
 
     def load_preset(self,
                     preset_id: UUID) -> None:
-        pass
+        
+        # set menu name
+        self.menu_component.preset_name.set(self.presets[preset_id].name)
+        
+        # set oscillator params
+        fundamental_params = self.presets[preset_id].fundamental_params
+        self.fundamental_osc_controller.load_preset(osc_params=fundamental_params)
+
+        floof_params = self.presets[preset_id].floof_params
+        self.floof_osc_controller.load_preset(osc_params=floof_params)
+
+        # set synthesizer len_s and regenerate all
+        new_len_s = self.presets[preset_id].fundamental_params.waveform_params.len_s
+        self.set_len_s_and_regen(len_s=new_len_s)
+
+        # set curr_preset
+        self.curr_preset_id = preset_id
+        self.menu_component.curr_preset_name.set('Current Preset: ' + self.presets[preset_id].name)
+
+    def save_presets_to_disk(self,) -> None:
+        # get current preset info
+        curr_name = self.menu_component.preset_name.get()
+        curr_ref_path = '' # SET CURR REF
+        curr_fundamental_params = self.fundamental_osc_controller.get_waveform_oscillator_params()
+        curr_floof_params = self.floof_osc_controller.get_waveform_oscillator_params()
+
+        # save current preset info to presets
+        self.presets[self.curr_preset_id].name = curr_name
+        self.presets[self.curr_preset_id].ref_path = curr_ref_path
+        self.presets[self.curr_preset_id].fundamental_params = curr_fundamental_params
+        self.presets[self.curr_preset_id].floof_params = curr_floof_params
+
+        # save presets to disk
+        self.preset_handler.save_presets_to_disk(preset_file='presets.json',
+                                                 presets=self.presets)
+        # refresh presets listbox
+        self.refresh_presets_listbox()

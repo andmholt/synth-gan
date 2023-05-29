@@ -12,6 +12,7 @@ class WaveformOscillatorComponent:
                  padx: int,
                  pady: int,
                  title: str,
+                 synthesizer_len_s: float,
                  parent):
         
         # callbacks
@@ -24,14 +25,14 @@ class WaveformOscillatorComponent:
         self.waveform_note = tk.StringVar(parent, 'F_3')
         self.waveform_complexity = tk.IntVar(parent, 0)
 
-        self.volume_env_attack_len = tk.IntVar(parent, 0)
-        self.volume_env_attack_sharpness = tk.IntVar(parent, 0)
-        self.volume_env_decay_len = tk.IntVar(parent, 0)
-        self.volume_env_decay_sharpness = tk.IntVar(parent, 0)
+        self.volume_env_attack_len = tk.DoubleVar(parent, 0)
+        self.volume_env_attack_sharpness = tk.DoubleVar(parent, 1)
+        self.volume_env_decay_len = tk.DoubleVar(parent, 1)
+        self.volume_env_decay_sharpness = tk.DoubleVar(parent, 1)
 
-        self.pitch_env_range = tk.IntVar(parent, 0)
-        self.pitch_env_attack_len = tk.IntVar(parent, 0)
-        self.pitch_env_attack_sharpness = tk.IntVar(parent, 0)
+        self.pitch_env_range = tk.IntVar(parent, -24)
+        self.pitch_env_attack_len = tk.DoubleVar(parent, 0.5)
+        self.pitch_env_attack_sharpness = tk.DoubleVar(parent, 1)
 
         self.lowpass_mix = tk.DoubleVar(parent, 0)
         self.lowpass_cutoff = tk.IntVar(parent, 20000)
@@ -82,13 +83,13 @@ class WaveformOscillatorComponent:
         pitch_env_range_scale.bind('<ButtonRelease-1>', lambda _: self.generate_buff())
         pitch_env_range_scale.grid(column=1, row=6, padx=app_theme.control_pad_x, pady=app_theme.control_pad_y, sticky=(tk.W, tk.E),)
 
-        ttk.Label(osc_frame, text='Attack Length (s)').grid(column=0, row=7, padx=app_theme.label_pad_x, pady=app_theme.label_pad_y)
-        pitch_env_attack_len_scale = tk.Scale(osc_frame, from_=0, to=4, orient='horizontal', variable=self.pitch_env_attack_len)
+        ttk.Label(osc_frame, text='Attack Length (%)').grid(column=0, row=7, padx=app_theme.label_pad_x, pady=app_theme.label_pad_y)
+        pitch_env_attack_len_scale = tk.Scale(osc_frame, from_=0, to=1, orient='horizontal', variable=self.pitch_env_attack_len, resolution=0.1)
         pitch_env_attack_len_scale.bind('<ButtonRelease-1>', lambda _: self.generate_buff())
         pitch_env_attack_len_scale.grid(column=1, row=7, padx=app_theme.control_pad_x, pady=app_theme.control_pad_y, sticky=(tk.W, tk.E),)
 
         ttk.Label(osc_frame, text='Attack Sharpness').grid(column=0, row=8, padx=app_theme.label_pad_x, pady=app_theme.label_pad_y)
-        pitch_env_attack_sharpness_scale = tk.Scale(osc_frame, from_=0, to=42, orient='horizontal', variable=self.pitch_env_attack_sharpness)
+        pitch_env_attack_sharpness_scale = tk.Scale(osc_frame, from_=0, to=10, orient='horizontal', variable=self.pitch_env_attack_sharpness, resolution=0.1)
         pitch_env_attack_sharpness_scale.bind('<ButtonRelease-1>', lambda _: self.generate_buff())
         pitch_env_attack_sharpness_scale.grid(column=1, row=8, padx=app_theme.control_pad_x, pady=app_theme.control_pad_y, sticky=(tk.W, tk.E))
 
@@ -97,23 +98,23 @@ class WaveformOscillatorComponent:
         # volume
         ttk.Label(osc_frame, text='Volume').grid(column=0, row=10, columnspan=2, pady=5)
 
-        ttk.Label(osc_frame, text='Attack Length (s)').grid(column=0, row=11, padx=app_theme.label_pad_x, pady=app_theme.label_pad_y)
-        volume_env_attack_len_scale = tk.Scale(osc_frame, from_=0, to=4, orient='horizontal', variable=self.volume_env_attack_len)
+        ttk.Label(osc_frame, text='Attack Length (%)').grid(column=0, row=11, padx=app_theme.label_pad_x, pady=app_theme.label_pad_y)
+        volume_env_attack_len_scale = tk.Scale(osc_frame, from_=0, to=1, orient='horizontal', variable=self.volume_env_attack_len, resolution=0.1)
         volume_env_attack_len_scale.bind('<ButtonRelease-1>', lambda _: self.reapply_supps())
         volume_env_attack_len_scale.grid(column=1, row=11, padx=app_theme.control_pad_x, pady=app_theme.control_pad_y, sticky=(tk.W, tk.E),)
 
         ttk.Label(osc_frame, text='Attack Sharpness').grid(column=0, row=12, padx=app_theme.label_pad_x, pady=app_theme.label_pad_y)
-        volume_env_attack_sharpness_scale = tk.Scale(osc_frame, from_=0, to=100, orient='horizontal', variable=self.volume_env_attack_sharpness)
+        volume_env_attack_sharpness_scale = tk.Scale(osc_frame, from_=0, to=10, orient='horizontal', variable=self.volume_env_attack_sharpness, resolution=0.1)
         volume_env_attack_sharpness_scale.bind('<ButtonRelease-1>', lambda _: self.reapply_supps())
         volume_env_attack_sharpness_scale.grid(column=1, row=12, padx=app_theme.control_pad_x, pady=app_theme.control_pad_y, sticky=(tk.W, tk.E),)
 
-        ttk.Label(osc_frame, text='Decay Length (s)').grid(column=0, row=13, padx=app_theme.label_pad_x, pady=app_theme.label_pad_y)
-        volume_env_decay_len_scale = tk.Scale(osc_frame, from_=0, to=4, orient='horizontal', variable=self.volume_env_decay_len)
+        ttk.Label(osc_frame, text='Decay Length (%)').grid(column=0, row=13, padx=app_theme.label_pad_x, pady=app_theme.label_pad_y)
+        volume_env_decay_len_scale = tk.Scale(osc_frame, from_=0, to=1, orient='horizontal', variable=self.volume_env_decay_len, resolution=0.1)
         volume_env_decay_len_scale.bind('<ButtonRelease-1>', lambda _: self.reapply_supps())
         volume_env_decay_len_scale.grid(column=1, row=13, padx=app_theme.control_pad_x, pady=app_theme.control_pad_y, sticky=(tk.W, tk.E))
 
         ttk.Label(osc_frame, text='Decay Sharpness').grid(column=0, row=14, padx=app_theme.label_pad_x, pady=app_theme.label_pad_y)
-        volume_env_decay_sharpness_scale = tk.Scale(osc_frame, from_=0, to=100, orient='horizontal', variable=self.volume_env_decay_sharpness)
+        volume_env_decay_sharpness_scale = tk.Scale(osc_frame, from_=0, to=10, orient='horizontal', variable=self.volume_env_decay_sharpness, resolution=0.1)
         volume_env_decay_sharpness_scale.bind('<ButtonRelease-1>', lambda _: self.reapply_supps())
         volume_env_decay_sharpness_scale.grid(column=1, row=14, padx=app_theme.control_pad_x, pady=app_theme.control_pad_y, sticky=(tk.W, tk.E))
 

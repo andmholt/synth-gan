@@ -38,7 +38,7 @@ class PresetHandler:
                                                         decay_sharpness=1)
         fundamental_pitch_env_params = PitchEnvParams(range=0,
                                                       attack_s=0,
-                                                      sharpness=1)
+                                                      attack_sharpness=1)
         fundamental_lowpass_params = LowpassParams(mix=1,
                                                    cutoff=20000,
                                                    order=4)
@@ -62,7 +62,7 @@ class PresetHandler:
                                                   decay_sharpness=1)
         floof_pitch_env_params = PitchEnvParams(range=0,
                                                 attack_s=0,
-                                                sharpness=1)
+                                                attack_sharpness=1)
         floof_lowpass_params = LowpassParams(mix=1,
                                              cutoff=20000,
                                              order=4)
@@ -140,15 +140,15 @@ class PresetHandler:
                                                    order=json_fundamental_lowpass['order'])
         
         json_fundamental_highpass = json_fundamental_osc['highpass']
-        fundamental_lowpass_params = HighpassParams(mix=json_fundamental_highpass['mix'],
-                                                    cutoff=json_fundamental_highpass['cutoff'],
-                                                    order=json_fundamental_highpass['order'])
+        fundamental_highpass_params = HighpassParams(mix=json_fundamental_highpass['mix'],
+                                                     cutoff=json_fundamental_highpass['cutoff'],
+                                                     order=json_fundamental_highpass['order'])
         
         fundamental_osc_params = WaveformOscillatorParams(waveform_params=fundamental_waveform_params,
                                                           volume_env_params=fundamental_volume_env_params,
                                                           pitch_env_params=fundamental_pitch_env_params,
                                                           lowpass_params=fundamental_lowpass_params,
-                                                          highpass_params=json_fundamental_highpass)
+                                                          highpass_params=fundamental_highpass_params)
         
         json_floof_osc = json_preset['floof_osc']
 
@@ -176,16 +176,16 @@ class PresetHandler:
                                              order=json_floof_lowpass['order'])
         
         json_floof_highpass = json_floof_osc['highpass']
-        floof_lowpass_params = HighpassParams(mix=json_floof_highpass['mix'],
-                                              cutoff=json_floof_highpass['cutoff'],
-                                              order=json_floof_highpass['order'])
+        floof_highpass_params = HighpassParams(mix=json_floof_highpass['mix'],
+                                               cutoff=json_floof_highpass['cutoff'],
+                                               order=json_floof_highpass['order'])
         
         floof_osc_params = WaveformOscillatorParams(waveform_params=floof_waveform_params,
                                                     volume_env_params=floof_volume_env_params,
                                                     pitch_env_params=floof_pitch_env_params,
                                                     lowpass_params=floof_lowpass_params,
-                                                    highpass_params=json_floof_highpass)
-        
+                                                    highpass_params=floof_highpass_params)
+
         return Preset(fundamental_params=fundamental_osc_params,
                       floof_params=floof_osc_params,
                       name=json_preset['name'],
@@ -205,7 +205,7 @@ class PresetHandler:
 
     def preset_to_json(self,
                        preset: Preset) -> object:
-        
+
         json_preset = {
             'name': preset.name,
             'ref_path': preset.ref_path,
@@ -231,12 +231,12 @@ class PresetHandler:
                 'lowpass': {
                     'mix': preset.fundamental_params.lowpass_params.mix,
                     'cutoff': preset.fundamental_params.lowpass_params.cutoff,
-                    'order': preset.fundamental_params.lowpass_params.order
+                    'order': preset.fundamental_params.lowpass_params.order.value
                 },
                 'highpass': {
                     'mix': preset.fundamental_params.highpass_params.mix,
                     'cutoff': preset.fundamental_params.highpass_params.cutoff,
-                    'order': preset.fundamental_params.highpass_params.order
+                    'order': preset.fundamental_params.highpass_params.order.value
                 }
             },
             'floof_osc': {
@@ -261,12 +261,12 @@ class PresetHandler:
                 'lowpass': {
                     'mix': preset.floof_params.lowpass_params.mix,
                     'cutoff': preset.floof_params.lowpass_params.cutoff,
-                    'order': preset.floof_params.lowpass_params.order
+                    'order': preset.floof_params.lowpass_params.order.value
                 },
                 'highpass': {
                     'mix': preset.floof_params.highpass_params.mix,
                     'cutoff': preset.floof_params.highpass_params.cutoff,
-                    'order': preset.floof_params.highpass_params.order
+                    'order': preset.floof_params.highpass_params.order.value
                 }
             }
         }

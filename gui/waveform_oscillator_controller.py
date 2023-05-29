@@ -49,16 +49,16 @@ class WaveformOscillatorController:
         Internal helper function to retrieve the PitchEnvParams.
         """
         return PitchEnvParams(range=self.osc_component.pitch_env_range.get(),
-                              attack_s=self.osc_component.pitch_env_attack_len.get(), # NEED TO IMPLEMENT ON BACKEND
+                              attack_s=self.osc_component.pitch_env_attack_len.get()*self.len_s,
                               attack_sharpness=self.osc_component.pitch_env_attack_sharpness.get())
     
     def get_volume_env_params(self) -> VolumeEnvParams:
         """
         Internal helper function to retrieve the VolumeEnvParams.
         """
-        return VolumeEnvParams(attack_s=self.osc_component.volume_env_attack_len.get(),
+        return VolumeEnvParams(attack_s=self.osc_component.volume_env_attack_len.get()*self.len_s,
                                attack_sharpness=self.osc_component.volume_env_attack_sharpness.get(),
-                               decay_s=self.osc_component.volume_env_decay_len.get(),
+                               decay_s=self.osc_component.volume_env_decay_len.get()*self.len_s,
                                decay_sharpness=self.osc_component.volume_env_decay_sharpness.get())
     
     def get_lowpass_params(self) -> LowpassParams:
@@ -115,3 +115,38 @@ class WaveformOscillatorController:
             self.synthesizer.submit_new_floof_supps(volume_env_params=volume_env_params,
                                                     lowpass_params=lowpass_params,
                                                     highpass_params=highpass_params)
+            
+    def load_preset(self,
+                    osc_params: WaveformOscillatorParams) -> None:
+        """
+        Loads the provided params to the oscillator component.
+
+        - osc_params: WaveformOscillatorParams
+        """
+
+        # waveform
+        self.osc_component.waveform_mix.set(osc_params.waveform_params.mix)
+        self.osc_component.waveform_phase.set(osc_params.waveform_params.phase)
+        self.osc_component.waveform_note.set(osc_params.waveform_params.fundamental.name)
+        self.osc_component.waveform_complexity.set(osc_params.waveform_params.complexity)
+
+        # pitch
+        self.osc_component.pitch_env_range.set(osc_params.pitch_env_params.range)
+        self.osc_component.pitch_env_attack_len.set(osc_params.pitch_env_params.attack_s / self.len_s)
+        self.osc_component.pitch_env_attack_sharpness.set(osc_params.pitch_env_params.range)
+
+        # volume
+        self.osc_component.volume_env_attack_len.set(osc_params.volume_env_params.attack_s / self.len_s)
+        self.osc_component.volume_env_attack_sharpness.set(osc_params.volume_env_params.attack_sharpness)
+        self.osc_component.volume_env_decay_len.set(osc_params.volume_env_params.decay_s / self.len_s)
+        self.osc_component.volume_env_decay_sharpness.set(osc_params.volume_env_params.decay_sharpness)
+
+        # lowpass
+        self.osc_component.lowpass_mix.set(osc_params.lowpass_params.mix)
+        self.osc_component.lowpass_cutoff.set(osc_params.lowpass_params.cutoff)
+        self.osc_component.lowpass_order.set(osc_params.lowpass_params.order)
+
+        # highpass
+        self.osc_component.highpass_mix.set(osc_params.highpass_params.mix)
+        self.osc_component.highpass_cutoff.set(osc_params.highpass_params.cutoff)
+        self.osc_component.highpass_cutoff.set(osc_params.highpass_params.order)

@@ -27,7 +27,7 @@ class Synthesizer:
                  fundamental_osc_params: WaveformOscillatorParams,
                  floof_osc_params: WaveformOscillatorParams) -> np.ndarray:
         """
-        Generate and sum the signals
+        Generate and sum the signals.
 
         - fundamental_osc_params: WaveformOscillatorParams
         - floof_osc_params: WaveformOscillatorParams
@@ -71,10 +71,10 @@ class Synthesizer:
         Used internally to sum the oscillators.
         """
         # if either buff is not set yet, set main_buff to the buff that is set
-        if self.fundamental_osc.buff == None:
+        if type(self.fundamental_osc.buff) != list and type(self.fundamental_osc.buff) != np.ndarray:
             self.main_buff = copy.deepcopy(self.floof_osc.buff)
             return
-        elif self.floof_osc.buff == None:
+        elif type(self.floof_osc.buff) != list and type(self.floof_osc.buff) != np.ndarray:
             self.main_buff = copy.deepcopy(self.fundamental_osc.buff)
             return
         num_oscs = 2
