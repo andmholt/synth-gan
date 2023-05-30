@@ -18,7 +18,9 @@ class MenuComponent:
                  pady: int,
                  parent,
                  presets: List[Preset],
+                 refs: List[str],
                  load_preset: Callable[[UUID], None],
+                 load_ref: Callable[[str], None],
                  insert_init_and_load_all: Callable,
                  save_presets_to_disk: Callable):
 
@@ -106,3 +108,13 @@ class MenuComponent:
 
         soft_tag_check = ttk.Checkbutton(tags_frame, text='Soft', variable=self.soft_tag, onvalue=True, offvalue=False)
         soft_tag_check.grid(column=1, row=1, padx=app_theme.check_pad_x, pady=app_theme.check_pad_y, sticky=tk.W)
+
+        # reference
+        ttk.Label(menu_frame, text='References').grid(column=0, row=8, padx=app_theme.label_pad_x, pady=app_theme.label_pad_y)
+        ref_scroll = tk.Scrollbar(menu_frame)
+        ref_scroll.grid(column=1, row=9, sticky=(tk.N, tk.S))
+        self.ref_list = tk.Listbox(menu_frame, yscrollcommand=ref_scroll.set)
+        self.ref_list.bind('<ButtonRelease-1>', lambda e: load_ref(refs[e.widget.curselection()[0]]))
+        self.ref_list.grid(column=0, row=9, padx=app_theme.control_pad_x, pady=app_theme.control_pad_y)
+        for ref in refs:
+            self.ref_list.insert(tk.END, ref)

@@ -3,6 +3,9 @@ import soundfile as sf
 import sounddevice as sd
 from enum import Enum
 import matplotlib.pyplot as plt
+import librosa
+from typing import Tuple
+import time
 
 class FilterOrder(Enum):
     """
@@ -80,5 +83,13 @@ def play_buff(buff: np.ndarray, sr: SampleRate) -> None:
     buff: np.ndarray = Stereo audio buffer
     sr: SampleRate = Sample rate of the buffer
     """
-    sd.play(np.column_stack((buff[0], buff[1])), sr.value)
+    # pad to avoid playback clipping
+    pad = np.zeros((int(sr.value*0.25)))
+    left = np.concatenate((buff[0], pad))
+    right = np.concatenate((buff[1], pad))
+    sd.play(np.column_stack((left, right)), sr.value)
     sd.wait()
+
+def read_wav(path: str) -> Tuple[np.ndarray, SampleRate]:
+    buff, sr = librosa.load(path, sr=None, mono=False)
+    return (buff, SampleRate(sr))

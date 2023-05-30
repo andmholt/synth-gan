@@ -273,7 +273,8 @@ class WaveformOscillator(Oscillator):
         """
         
         # define frequencies
-        final_note = NoteName(waveform_params.fundamental.value + pitch_env_params.range)
+        final_note_num = waveform_params.fundamental.value + pitch_env_params.range
+        final_note = NoteName(max(final_note_num, 0))
         f0 = note_name_to_freq(waveform_params.fundamental)
         f1 = note_name_to_freq(final_note)
         

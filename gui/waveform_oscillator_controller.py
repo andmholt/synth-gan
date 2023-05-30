@@ -1,5 +1,6 @@
 import sys
 sys.path.append('..')
+from typing import Callable
 from oscillator_params import WaveformParams, WaveformOscillatorParams, VolumeEnvParams, PitchEnvParams, HighpassParams, LowpassParams
 from waveform_oscillator_component import WaveformOscillatorComponent
 from note_name import NoteName
@@ -11,11 +12,13 @@ class WaveformOscillatorController:
                  is_fundamental_osc: bool,
                  synthesizer: Synthesizer,
                  osc_component: WaveformOscillatorComponent,
-                 len_s: float):
+                 len_s: float,
+                 update_plots: Callable):
         self.is_fundamental_osc = is_fundamental_osc
         self.synthesizer = synthesizer
         self.osc_component = osc_component
         self.len_s = len_s
+        self.update_plots = update_plots
 
         # send callbacks to component
         self.osc_component.set_generate_buff_callback(self.generate_buff)
@@ -34,6 +37,28 @@ class WaveformOscillatorController:
         self.len_s = len_s
         self.generate_buff()
 
+    def sharpnesss_conversion(self,
+                              sharpness: float) -> float:
+        """
+        Performs conversion of the sharpness value from gui to synthesizer param.
+
+        - sharpness: float
+
+        returns -> sharpness: float
+        """
+        if sharpness < 0:
+            y = sharpness + 10
+            y = y / 10
+            if y == 0:
+                y = 0.01
+            return y
+        elif sharpness > 0:
+            return sharpness * 10
+        else:
+            # sharpness must be 0
+            return 1
+
+
     def get_waveform_params(self) -> WaveformParams:
         """
         Internal helper function to retrieve the WaveformParams.
@@ -50,16 +75,16 @@ class WaveformOscillatorController:
         """
         return PitchEnvParams(range=self.osc_component.pitch_env_range.get(),
                               attack_s=self.osc_component.pitch_env_attack_len.get()*self.len_s,
-                              attack_sharpness=self.osc_component.pitch_env_attack_sharpness.get())
+                              attack_sharpness=self.sharpnesss_conversion(self.osc_component.pitch_env_attack_sharpness.get()))
     
     def get_volume_env_params(self) -> VolumeEnvParams:
         """
         Internal helper function to retrieve the VolumeEnvParams.
         """
         return VolumeEnvParams(attack_s=self.osc_component.volume_env_attack_len.get()*self.len_s,
-                               attack_sharpness=self.osc_component.volume_env_attack_sharpness.get(),
+                               attack_sharpness=self.sharpnesss_conversion(self.osc_component.volume_env_attack_sharpness.get()),
                                decay_s=self.osc_component.volume_env_decay_len.get()*self.len_s,
-                               decay_sharpness=self.osc_component.volume_env_decay_sharpness.get())
+                               decay_sharpness=self.sharpnesss_conversion(self.osc_component.volume_env_decay_sharpness.get()))
     
     def get_lowpass_params(self) -> LowpassParams:
         """
@@ -98,6 +123,8 @@ class WaveformOscillatorController:
         else:
             self.synthesizer.submit_new_floof(floof_params=waveform_osc_params)
 
+        self.update_plots()
+
     def reapply_supps(self,) -> None:
         """
         Use the previously-generated bare buffer to only apply supplementaries (volume, filter).
@@ -115,6 +142,8 @@ class WaveformOscillatorController:
             self.synthesizer.submit_new_floof_supps(volume_env_params=volume_env_params,
                                                     lowpass_params=lowpass_params,
                                                     highpass_params=highpass_params)
+            
+        self.update_plots()
             
     def load_preset(self,
                     osc_params: WaveformOscillatorParams) -> None:

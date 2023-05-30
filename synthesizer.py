@@ -43,6 +43,9 @@ class Synthesizer:
         # combine signals
         self.sum_buffs()
 
+        # normalize
+        self.normalize_signal()
+
         return self.main_buff
     
     def set_len_s_and_gen(self,
@@ -95,6 +98,20 @@ class Synthesizer:
             self.main_buff = np.add(np.array(self.floof_osc.buff)*buff_weight,
                                     np.array(resized_fundamental_buff)*buff_weight)
         
+    def normalize_signal(self,) -> None:
+        """
+        Normalizes the buff.
+        """
+        buff_max = np.max(self.main_buff)
+        adj = 1/buff_max
+
+        # apply adjustment
+        # self.buff *= adj
+        self.main_buff = np.multiply(self.main_buff, adj)
+
+        # correct for out of bounds
+        self.main_buff = self.main_buff / np.max(np.abs(self.main_buff))
+
     def submit_new_fundamental(self,
                                fundamental_params: WaveformOscillatorParams) -> np.ndarray:
         """
@@ -106,6 +123,7 @@ class Synthesizer:
         """
         self.fundamental_osc(waveform_oscillator_params=fundamental_params)
         self.sum_buffs()
+        self.normalize_signal()
         return self.main_buff
 
     def submit_new_fundamental_supps(self,
@@ -128,6 +146,7 @@ class Synthesizer:
                                                       highpass_params=highpass_params)
         self.fundamental_osc(waveform_oscillator_params=fundamental_params)
         self.sum_buffs()
+        self.normalize_signal()
         return self.main_buff
     
     def submit_new_floof(self,
@@ -141,6 +160,7 @@ class Synthesizer:
         """
         self.floof_osc(waveform_oscillator_params=floof_params)
         self.sum_buffs()
+        self.normalize_signal()
         return self.main_buff
     
     def submit_new_floof_supps(self,
@@ -163,4 +183,5 @@ class Synthesizer:
                                                 highpass_params=highpass_params)
         self.floof_osc(waveform_oscillator_params=floof_params)
         self.sum_buffs()
+        self.normalize_signal()
         return self.main_buff
